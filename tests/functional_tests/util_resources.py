@@ -41,11 +41,10 @@ import psutil
 def available_ram_gb():
     ram_bytes = psutil.virtual_memory().available
     kilo = 1024.0
-    ram_gb = ram_bytes / kilo**3
-    return ram_gb
+    return ram_bytes / kilo**3
 
 def get_time_pi_seconds(cores, app_dir='.'):
-    app_path = '{}/cpu_power_test'.format(app_dir)
+    app_path = f'{app_dir}/cpu_power_test'
     time_calc = subprocess.check_output([app_path, str(cores)])
     decoded = time_calc.decode('utf-8')
     miliseconds = int(decoded)

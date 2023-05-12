@@ -59,8 +59,8 @@ class BanTest():
         res = daemon.get_bans()
         assert len(res.bans) == 2
         for i in range(2):
-          assert res.bans[i].host == '1.2.3.4' or res.bans[i].host == '5.6.7.8'
-          assert res.bans[i].seconds >= 7 and res.bans[0].seconds <= 100 # allow for slow RPC
+            assert res.bans[i].host in ['1.2.3.4', '5.6.7.8']
+            assert res.bans[i].seconds >= 7 and res.bans[0].seconds <= 100 # allow for slow RPC
 
         daemon.set_bans([{'host': '1.2.3.4', 'ban': False}])
         res = daemon.get_bans()
@@ -85,11 +85,11 @@ class BanTest():
         res = daemon.get_bans()
         assert len(res.bans) == 2
         for i in range(2):
-          assert res.bans[i].host == '5.6.7.8' or res.bans[i].host == '3.4.5.6'
-          if res.bans[i].host == '5.6.7.8':
-            assert res.bans[i].seconds >= 96 and res.bans[0].seconds <= 98 # allow for slow RPC
-          else:
-            assert res.bans[i].seconds >= 1 and res.bans[0].seconds <= 2 # allow for slow RPC
+            assert res.bans[i].host in ['5.6.7.8', '3.4.5.6']
+            if res.bans[i].host == '5.6.7.8':
+              assert res.bans[i].seconds >= 96 and res.bans[0].seconds <= 98 # allow for slow RPC
+            else:
+              assert res.bans[i].seconds >= 1 and res.bans[0].seconds <= 2 # allow for slow RPC
 
         time.sleep(2)
         res = daemon.get_bans()

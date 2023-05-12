@@ -58,7 +58,7 @@ class WalletTest():
         WALLET_DIRECTORY = os.environ['WALLET_DIRECTORY']
         assert WALLET_DIRECTORY != ''
         try:
-            os.unlink(WALLET_DIRECTORY + '/' + name)
+            os.unlink(f'{WALLET_DIRECTORY}/{name}')
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
@@ -70,7 +70,7 @@ class WalletTest():
     def file_exists(self, name):
         WALLET_DIRECTORY = os.environ['WALLET_DIRECTORY']
         assert WALLET_DIRECTORY != ''
-        return os.path.isfile(WALLET_DIRECTORY + '/' + name)
+        return os.path.isfile(f'{WALLET_DIRECTORY}/{name}')
 
     def reset(self):
         print('Resetting blockchain')
@@ -187,11 +187,11 @@ class WalletTest():
         print('Testing tags')
         wallet = Wallet()
         res = wallet.get_account_tags()
-        assert not 'account_tags' in res or len(res.account_tags) == 0
+        assert 'account_tags' not in res or len(res.account_tags) == 0
         ok = False
         try: res = wallet.get_accounts('tag')
         except: ok = True
-        assert ok or not 'subaddress_accounts' in res or res.subaddress_accounts == 0
+        assert ok or 'subaddress_accounts' not in res or res.subaddress_accounts == 0
         wallet.tag_accounts('tag0', [1])
         res = wallet.get_account_tags()
         assert len(res.account_tags) == 1
@@ -214,7 +214,7 @@ class WalletTest():
         assert res.account_tags[0].accounts == [1]
         wallet.untag_accounts([1])
         res = wallet.get_account_tags()
-        assert not 'account_tags' in res or len(res.account_tags) == 0
+        assert 'account_tags' not in res or len(res.account_tags) == 0
         wallet.tag_accounts('tag0', [0])
         wallet.tag_accounts('tag1', [1])
         res = wallet.get_account_tags()
@@ -320,7 +320,7 @@ class WalletTest():
         languages = res.languages
         languages_local = res.languages_local
         for language in languages + languages_local:
-            sys.stdout.write('Creating ' + language + ' wallet\n')
+            sys.stdout.write(f'Creating {language}' + ' wallet\n')
             wallet.create_wallet(filename = '', language = language)
             res = wallet.query_key('mnemonic')
             wallet.close_wallet()

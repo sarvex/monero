@@ -69,7 +69,7 @@ class TransferTest():
         wallet.refresh()
 
     def create_txes(self, address, ntxes):
-        print('Creating ' + str(ntxes) + ' transactions')
+        print(f'Creating {str(ntxes)} transactions')
 
         daemon = Daemon()
         wallet = Wallet()
@@ -77,9 +77,9 @@ class TransferTest():
         dst = {'address': address, 'amount': 1000000000000}
 
         txes = {}
-        for i in range(ntxes):
-          res = wallet.transfer([dst], get_tx_hex = True)
-          txes[res.tx_hash] = res
+        for _ in range(ntxes):
+            res = wallet.transfer([dst], get_tx_hex = True)
+            txes[res.tx_hash] = res
 
         return txes
 
@@ -87,7 +87,7 @@ class TransferTest():
         daemon = Daemon()
 
         res = daemon.get_transaction_pool_hashes()
-        assert not 'tx_hashes' in res or len(res.tx_hashes) == 0
+        assert 'tx_hashes' not in res or len(res.tx_hashes) == 0
         res = daemon.get_transaction_pool_stats()
         assert res.pool_stats.bytes_total == 0
         assert res.pool_stats.bytes_min == 0
@@ -100,7 +100,7 @@ class TransferTest():
         assert res.pool_stats.num_10m == 0
         assert res.pool_stats.num_not_relayed == 0
         assert res.pool_stats.histo_98pc == 0
-        assert not 'histo' in res.pool_stats or len(res.pool_stats.histo) == 0
+        assert 'histo' not in res.pool_stats or len(res.pool_stats.histo) == 0
         assert res.pool_stats.num_double_spends == 0
 
     def check_txpool(self):
@@ -148,7 +148,7 @@ class TransferTest():
             max_bytes = max(max_bytes, x.blob_size)
 
         print('Checking all txs received via zmq')
-        for i in range(len(txes.keys())):
+        for _ in range(len(txes.keys())):
             zmq_event = zmq.recv(zmq_topic)
             assert len(zmq_event) == 1
 
@@ -182,8 +182,8 @@ class TransferTest():
         daemon.flush_txpool([txes_keys[1], txes_keys[3]])
         res = daemon.get_transaction_pool()
         assert len(res.transactions) == txpool_size - 2
-        assert len([x for x in res.transactions if x.id_hash == txes_keys[1]]) == 0
-        assert len([x for x in res.transactions if x.id_hash == txes_keys[3]]) == 0
+        assert not [x for x in res.transactions if x.id_hash == txes_keys[1]]
+        assert not [x for x in res.transactions if x.id_hash == txes_keys[3]]
 
         new_keys = list(txes.keys())
         new_keys.remove(txes_keys[1])
@@ -236,9 +236,9 @@ class TransferTest():
         print('Mining transactions')
         daemon.generateblocks('42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm', 1)
         res = daemon.get_transaction_pool()
-        assert not 'transactions' in res or len(res.transactions) == txpool_size - 5
+        assert 'transactions' not in res or len(res.transactions) == txpool_size - 5
         res = daemon.get_transaction_pool_hashes()
-        assert not 'tx_hashes' in res or len(res.tx_hashes) == 0
+        assert 'tx_hashes' not in res or len(res.tx_hashes) == 0
 
         self.check_empty_pool()
 

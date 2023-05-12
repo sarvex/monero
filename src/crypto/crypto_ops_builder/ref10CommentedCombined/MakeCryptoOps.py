@@ -141,17 +141,17 @@ xmr_comments = textwrap.dedent("""\
 def qhasmToC(fi, header, out):
     #replaces mentiones of "header" in "fi" with output in "out"
     #also removes qhasm comments
-    out1 = out+".tmp"
+    out1 = f"{out}.tmp"
     rem_qhasm = " |grep -v 'qhasm' |grep -v ' asm'"
     com = "sed -e '/#include \""+header+"\"/ {' -e 'r "+header+"' -e 'd' -e '}' "+fi+rem_qhasm+" > "+out1
-    com2 = "awk 'NF' "+out1+" > "+out
+    com2 = f"awk 'NF' {out1} > {out}"
     print(com)
     os.system(com)
     print(com2)
     os.system(com2)
     os.remove(out1) #temporary
 
-while (a != "m") and (a != "m") and (a != "c"):
+while a not in ["m", "m", "c"]:
     a = raw_input("Make / Clean/ Quit    m / c / q?")
 
 if a == "m":
@@ -168,7 +168,7 @@ if a == "m":
     print(fe_comments)
     fe = glob.glob("fe*.c")
     for g in fe:
-        os.system("cp "+g+" "+g.replace("fe", "fe.monero."))
+        os.system(f"cp {g} " + g.replace("fe", "fe.monero."))
     qhasmToC("fe_pow22523.c", "pow22523.h", "fe.monero._pow22523.c")
     qhasmToC("fe_invert.c", "pow225521.h", "fe.monero._invert.c")
     os.system("rm fe.monero._isnonzero.c") #since it's modified, it's in xmrSpecificOld
@@ -187,7 +187,7 @@ if a == "m":
     print("making ge.c")
     ge = glob.glob("ge*.c")
     for g in ge:
-        os.system("cp "+g+" "+g.replace("ge", "ge.monero."))
+        os.system(f"cp {g} " + g.replace("ge", "ge.monero."))
     print(ge_comments)
     #need to substitute the below lines for their .h files in the appropriate places
     qhasmToC("ge_add.c", "ge_add.h", "ge.monero._add.c")

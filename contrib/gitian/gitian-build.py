@@ -57,7 +57,7 @@ def rebuild():
     global args, workdir
 
     print('\nBuilding Dependencies\n')
-    os.makedirs('../out/' + args.version, exist_ok=True)
+    os.makedirs(f'../out/{args.version}', exist_ok=True)
 
 
     for i in args.os:
@@ -66,14 +66,44 @@ def rebuild():
         suffix = platforms[i][2]
 
         print('\nCompiling ' + args.version + ' ' + os_name)
-        infile = 'inputs/monero/contrib/gitian/gitian-' + tag_name + '.yml'
-        subprocess.check_call(['bin/gbuild', '-j', args.jobs, '-m', args.memory, '--commit', 'monero='+args.commit, '--url', 'monero='+args.url, infile])
-        subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-'+tag_name, '--destination', '../sigs/', infile])
-        subprocess.check_call('mv build/out/monero-*.' + suffix + ' ../out/'+args.version, shell=True)
-        print('Moving var/install.log to var/install-' + tag_name + '.log')
-        subprocess.check_call('mv var/install.log var/install-' + tag_name + '.log', shell=True)
-        print('Moving var/build.log to var/build-' + tag_name + '.log')
-        subprocess.check_call('mv var/build.log var/build-' + tag_name + '.log', shell=True)
+        infile = f'inputs/monero/contrib/gitian/gitian-{tag_name}.yml'
+        subprocess.check_call(
+            [
+                'bin/gbuild',
+                '-j',
+                args.jobs,
+                '-m',
+                args.memory,
+                '--commit',
+                f'monero={args.commit}',
+                '--url',
+                f'monero={args.url}',
+                infile,
+            ]
+        )
+        subprocess.check_call(
+            [
+                'bin/gsign',
+                '-p',
+                args.sign_prog,
+                '--signer',
+                args.signer,
+                '--release',
+                f'{args.version}-{tag_name}',
+                '--destination',
+                '../sigs/',
+                infile,
+            ]
+        )
+        subprocess.check_call(
+            f'mv build/out/monero-*.{suffix} ../out/{args.version}', shell=True
+        )
+        print(f'Moving var/install.log to var/install-{tag_name}.log')
+        subprocess.check_call(
+            f'mv var/install.log var/install-{tag_name}.log', shell=True
+        )
+        print(f'Moving var/build.log to var/build-{tag_name}.log')
+        subprocess.check_call(f'mv var/build.log var/build-{tag_name}.log', shell=True)
 
     os.chdir(workdir)
 
@@ -81,8 +111,15 @@ def rebuild():
         print('\nCommitting '+args.version+' Unsigned Sigs\n')
         os.chdir('sigs')
         for i, v in platforms:
-            subprocess.check_call(['git', 'add', args.version+'-'+v[1]+'/'+args.signer])
-        subprocess.check_call(['git', 'commit', '-m', 'Add '+args.version+' unsigned sigs for '+args.signer])
+            subprocess.check_call(['git', 'add', f'{args.version}-{v[1]}/{args.signer}'])
+        subprocess.check_call(
+            [
+                'git',
+                'commit',
+                '-m',
+                f'Add {args.version} unsigned sigs for {args.signer}',
+            ]
+        )
         os.chdir(workdir)
 
 
@@ -93,7 +130,15 @@ def build():
     os.chdir('builder')
     os.makedirs('inputs', exist_ok=True)
 
-    subprocess.check_call(['make', '-C', 'inputs/monero/contrib/depends', 'download', 'SOURCES_PATH=' + os.getcwd() + '/cache/common'])
+    subprocess.check_call(
+        [
+            'make',
+            '-C',
+            'inputs/monero/contrib/depends',
+            'download',
+            f'SOURCES_PATH={os.getcwd()}/cache/common',
+        ]
+    )
 
     rebuild()
 
@@ -104,7 +149,17 @@ def verify():
 
     for i, v in platforms:
         print('\nVerifying v'+args.version+' '+v[0]+'\n')
-        subprocess.check_call(['bin/gverify', '-v', '-d', '../sigs/', '-r', args.version+'-'+v[1], 'inputs/monero/contrib/gitian/gitian-'+v[1]+'.yml'])
+        subprocess.check_call(
+            [
+                'bin/gverify',
+                '-v',
+                '-d',
+                '../sigs/',
+                '-r',
+                f'{args.version}-{v[1]}',
+                f'inputs/monero/contrib/gitian/gitian-{v[1]}.yml',
+            ]
+        )
     os.chdir(workdir)
 
 def main():
@@ -154,20 +209,20 @@ def main():
         os.environ['USE_DOCKER'] = '1'
     elif not args.kvm:
         os.environ['USE_LXC'] = '1'
-        if not 'GITIAN_HOST_IP' in os.environ.keys():
+        if 'GITIAN_HOST_IP' not in os.environ:
             os.environ['GITIAN_HOST_IP'] = '10.0.2.2'
-        if not 'LXC_GUEST_IP' in os.environ.keys():
+        if 'LXC_GUEST_IP' not in os.environ:
             os.environ['LXC_GUEST_IP'] = '10.0.2.5'
 
     script_name = os.path.basename(sys.argv[0])
     # Signer and version shouldn't be empty
     if args.signer == '':
-        print(script_name+': Missing signer.')
-        print('Try '+script_name+' --help for more information')
+        print(f'{script_name}: Missing signer.')
+        print(f'Try {script_name} --help for more information')
         sys.exit(1)
     if args.version == '':
-        print(script_name+': Missing version.')
-        print('Try '+script_name+' --help for more information')
+        print(f'{script_name}: Missing version.')
+        print(f'Try {script_name} --help for more information')
         sys.exit(1)
 
     # Add leading 'v' for tags
@@ -181,9 +236,11 @@ def main():
     os.makedirs('builder/inputs/monero', exist_ok=True)
     os.chdir('builder/inputs/monero')
     if args.pull:
-        subprocess.check_call(['git', 'fetch', args.url, 'refs/pull/'+args.version+'/merge'])
+        subprocess.check_call(
+            ['git', 'fetch', args.url, f'refs/pull/{args.version}/merge']
+        )
         args.commit = subprocess.check_output(['git', 'show', '-s', '--format=%H', 'FETCH_HEAD'], universal_newlines=True).strip()
-        args.version = 'pull-' + args.version
+        args.version = f'pull-{args.version}'
     print(args.commit)
     subprocess.check_call(['git', 'fetch'])
     subprocess.check_call(['git', 'checkout', args.commit])

@@ -73,7 +73,7 @@ def namespace_file(fpath, package):
             lines.pop(line_package)
 
     else:
-        new_package = "package %s;" % package
+        new_package = f"package {package};"
         if line_package is None:
             lines.insert(line_syntax + 1 if line_syntax is not None else 0, new_package)
         else:
@@ -88,12 +88,11 @@ def namespace_file(fpath, package):
 def protoc(files, out_dir, additional_includes=(), package=None, force=False):
     """Compile code with protoc and return the data."""
 
-    include_dirs = set()
-    include_dirs.add(PROTOC_INCLUDE)
+    include_dirs = {PROTOC_INCLUDE}
     if additional_includes:
         include_dirs.update(additional_includes)
 
-    with TemporaryDirectory() as tmpdir_protob, TemporaryDirectory() as tmpdir_out:
+    with (TemporaryDirectory() as tmpdir_protob, TemporaryDirectory() as tmpdir_out):
         include_dirs.add(tmpdir_protob)
 
         new_files = []
@@ -106,7 +105,7 @@ def protoc(files, out_dir, additional_includes=(), package=None, force=False):
                 namespace_file(tmp_file, package)
             new_files.append(tmp_file)
 
-        protoc_includes = ["-I" + dir for dir in include_dirs if dir]
+        protoc_includes = [f"-I{dir}" for dir in include_dirs if dir]
 
         exec_args = (
             [
@@ -149,15 +148,14 @@ def add_undef(out_dir):
         with open(fname) as fh:
             lines = fh.readlines()
 
-        idx_insertion = None
-        for idx in range(len(lines)):
-            if '@@protoc_insertion_point(includes)' in lines[idx]:
-                idx_insertion = idx
-                break
-
-        if idx_insertion is None:
-            pass
-
+        idx_insertion = next(
+            (
+                idx
+                for idx in range(len(lines))
+                if '@@protoc_insertion_point(includes)' in lines[idx]
+            ),
+            None,
+        )
         lines.insert(idx_insertion + 1, UNDEF_STATEMENT)
         with open(fname, 'w') as fh:
             fh.write("".join(lines))
@@ -165,11 +163,8 @@ def add_undef(out_dir):
 
 def strip_leader(s, prefix):
     """Remove given prefix from underscored name."""
-    leader = prefix + "_"
-    if s.startswith(leader):
-        return s[len(leader) :]
-    else:
-        return s
+    leader = f"{prefix}_"
+    return s[len(leader) :] if s.startswith(leader) else s
 
 
 def main():
@@ -193,17 +188,15 @@ def main():
     PROTOBUF_PROTOC_EXECUTABLE = os.getenv("PROTOBUF_PROTOC_EXECUTABLE", None)
 
     if PROTOBUF_PROTOC_EXECUTABLE and not os.path.exists(PROTOBUF_PROTOC_EXECUTABLE):
-        raise ValueError("PROTOBUF_PROTOC_EXECUTABLE set but not found: %s" % PROTOBUF_PROTOC_EXECUTABLE)
+        raise ValueError(
+            f"PROTOBUF_PROTOC_EXECUTABLE set but not found: {PROTOBUF_PROTOC_EXECUTABLE}"
+        )
 
     elif PROTOBUF_PROTOC_EXECUTABLE:
         PROTOC = PROTOBUF_PROTOC_EXECUTABLE
 
     else:
-        if os.name == "nt":
-            PROTOC = which("protoc.exe")
-        else:
-            PROTOC = which("protoc")
-
+        PROTOC = which("protoc.exe") if os.name == "nt" else which("protoc")
     if not PROTOC:
         raise ValueError("protoc command not found. Set PROTOBUF_PROTOC_EXECUTABLE env var to the protoc binary and optionally PROTOBUF_INCLUDE_DIRS")
 

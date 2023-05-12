@@ -91,70 +91,70 @@ class MultisigTest():
         daemon.generateblocks(address, blocks)
 
     def create_multisig_wallets(self, M_threshold, N_total, expected_address):
-      print('Creating ' + str(M_threshold) + '/' + str(N_total) + ' multisig wallet')
-      seeds = [
-        'velvet lymph giddy number token physics poetry unquoted nibs useful sabotage limits benches lifestyle eden nitrogen anvil fewest avoid batch vials washing fences goat unquoted',
-        'peeled mixture ionic radar utopia puddle buying illness nuns gadget river spout cavernous bounced paradise drunk looking cottage jump tequila melting went winter adjust spout',
-        'dilute gutter certain antics pamphlet macro enjoy left slid guarded bogeys upload nineteen bomb jubilee enhanced irritate turnip eggs swung jukebox loudly reduce sedan slid',
-        'waking gown buffet negative reorder speedy baffles hotel pliers dewdrop actress diplomat lymph emit ajar mailed kennel cynical jaunt justice weavers height teardrop toyed lymph',
-      ]
-      assert M_threshold <= N_total
-      assert N_total <= len(seeds)
-      self.wallet = [None] * N_total
-      info = []
-      for i in range(N_total):
-        self.wallet[i] = Wallet(idx = i)
-        try: self.wallet[i].close_wallet()
-        except: pass
-        res = self.wallet[i].restore_deterministic_wallet(seed = seeds[i])
-        res = self.wallet[i].prepare_multisig(enable_multisig_experimental = True)
-        assert len(res.multisig_info) > 0
-        info.append(res.multisig_info)
+        print(f'Creating {str(M_threshold)}/{str(N_total)} multisig wallet')
+        seeds = [
+          'velvet lymph giddy number token physics poetry unquoted nibs useful sabotage limits benches lifestyle eden nitrogen anvil fewest avoid batch vials washing fences goat unquoted',
+          'peeled mixture ionic radar utopia puddle buying illness nuns gadget river spout cavernous bounced paradise drunk looking cottage jump tequila melting went winter adjust spout',
+          'dilute gutter certain antics pamphlet macro enjoy left slid guarded bogeys upload nineteen bomb jubilee enhanced irritate turnip eggs swung jukebox loudly reduce sedan slid',
+          'waking gown buffet negative reorder speedy baffles hotel pliers dewdrop actress diplomat lymph emit ajar mailed kennel cynical jaunt justice weavers height teardrop toyed lymph',
+        ]
+        assert M_threshold <= N_total
+        assert N_total <= len(seeds)
+        self.wallet = [None] * N_total
+        info = []
+        for i in range(N_total):
+          self.wallet[i] = Wallet(idx = i)
+          try: self.wallet[i].close_wallet()
+          except: pass
+          res = self.wallet[i].restore_deterministic_wallet(seed = seeds[i])
+          res = self.wallet[i].prepare_multisig(enable_multisig_experimental = True)
+          assert len(res.multisig_info) > 0
+          info.append(res.multisig_info)
 
-      for i in range(N_total):
-        res = self.wallet[i].is_multisig()
-        assert res.multisig == False
-
-      addresses = []
-      next_stage = []
-      for i in range(N_total):
-        res = self.wallet[i].make_multisig(info, M_threshold)
-        addresses.append(res.address)
-        next_stage.append(res.multisig_info)
-
-      for i in range(N_total):
-        res = self.wallet[i].is_multisig()
-        assert res.multisig == True
-        assert not res.ready
-        assert res.threshold == M_threshold
-        assert res.total == N_total
-
-      while True:
-        n_ready = 0
         for i in range(N_total):
           res = self.wallet[i].is_multisig()
-          if res.ready == True:
-            n_ready += 1
-        assert n_ready == 0 or n_ready == N_total
-        if n_ready == N_total:
-          break
-        info = next_stage
-        next_stage = []
-        addresses = []
-        for i in range(N_total):
-          res = self.wallet[i].exchange_multisig_keys(info)
-          next_stage.append(res.multisig_info)
-          addresses.append(res.address)
-      for i in range(N_total):
-        assert addresses[i] == expected_address
-      self.wallet_address = expected_address
+          assert res.multisig == False
 
-      for i in range(N_total):
-        res = self.wallet[i].is_multisig()
-        assert res.multisig == True
-        assert res.ready == True
-        assert res.threshold == M_threshold
-        assert res.total == N_total
+        addresses = []
+        next_stage = []
+        for i in range(N_total):
+          res = self.wallet[i].make_multisig(info, M_threshold)
+          addresses.append(res.address)
+          next_stage.append(res.multisig_info)
+
+        for i in range(N_total):
+          res = self.wallet[i].is_multisig()
+          assert res.multisig == True
+          assert not res.ready
+          assert res.threshold == M_threshold
+          assert res.total == N_total
+
+        while True:
+            n_ready = 0
+            for i in range(N_total):
+              res = self.wallet[i].is_multisig()
+              if res.ready == True:
+                n_ready += 1
+            assert n_ready in [0, N_total]
+            if n_ready == N_total:
+              break
+            info = next_stage
+            next_stage = []
+            addresses = []
+            for i in range(N_total):
+              res = self.wallet[i].exchange_multisig_keys(info)
+              next_stage.append(res.multisig_info)
+              addresses.append(res.address)
+        for i in range(N_total):
+          assert addresses[i] == expected_address
+        self.wallet_address = expected_address
+
+        for i in range(N_total):
+          res = self.wallet[i].is_multisig()
+          assert res.multisig == True
+          assert res.ready == True
+          assert res.threshold == M_threshold
+          assert res.total == N_total
 
     def test_states(self):
         print('Testing multisig states')
@@ -176,9 +176,8 @@ class MultisigTest():
             assert len(res.multisig_info) > 0
             info2of2.append(res.multisig_info)
 
-        kex_info = []
         res = wallet2of2[0].make_multisig(info2of2, 2)
-        kex_info.append(res.multisig_info)
+        kex_info = [res.multisig_info]
         res = wallet2of2[1].make_multisig(info2of2, 2)
         kex_info.append(res.multisig_info)
         res = wallet2of2[0].exchange_multisig_keys(kex_info)
@@ -228,14 +227,15 @@ class MultisigTest():
         assert ok
 
         ok = False
-        try: res = wallet2of3[1].make_multisig(info2of3[0:2], 2)
+        try:
+            res = wallet2of3[1].make_multisig(info2of3[:2], 2)
         except: ok = True
         assert ok
 
     def import_multisig_info(self, signers, expected_outputs):
         assert len(signers) >= 2
 
-        print('Importing multisig info from ' + str(signers))
+        print(f'Importing multisig info from {str(signers)}')
 
         info = []
         for i in signers:
@@ -252,7 +252,7 @@ class MultisigTest():
 
         daemon = Daemon()
 
-        print("Creating multisig transaction from wallet " + str(signers[0]))
+        print(f"Creating multisig transaction from wallet {str(signers[0])}")
 
         dst = {'address': '42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm', 'amount': 1000000000000}
         res = self.wallet[signers[0]].transfer([dst])
@@ -274,54 +274,60 @@ class MultisigTest():
           self.wallet[i].refresh()
 
         for i in range(len(signers[1:])):
-          print('Signing multisig transaction with wallet ' + str(signers[i+1]))
-          res = self.wallet[signers[i+1]].describe_transfer(multisig_txset = multisig_txset)
-          assert len(res.desc) == 1
-          desc = res.desc[0]
-          assert desc.amount_in >= amount + fee
-          assert desc.amount_out == desc.amount_in - fee
-          assert desc.ring_size == 16
-          assert desc.unlock_time == 0
-          assert not 'payment_id' in desc or desc.payment_id in ['', '0000000000000000']
-          assert desc.change_amount == desc.amount_in - 1000000000000 - fee
-          assert desc.change_address == self.wallet_address
-          assert desc.fee == fee
-          assert len(desc.recipients) == 1
-          rec = desc.recipients[0]
-          assert rec.address == '42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm'
-          assert rec.amount == 1000000000000
+            print(f'Signing multisig transaction with wallet {str(signers[i + 1])}')
+            res = self.wallet[signers[i+1]].describe_transfer(multisig_txset = multisig_txset)
+            assert len(res.desc) == 1
+            desc = res.desc[0]
+            assert desc.amount_in >= amount + fee
+            assert desc.amount_out == desc.amount_in - fee
+            assert desc.ring_size == 16
+            assert desc.unlock_time == 0
+            assert 'payment_id' not in desc or desc.payment_id in ['', '0000000000000000']
+            assert desc.change_amount == desc.amount_in - 1000000000000 - fee
+            assert desc.change_address == self.wallet_address
+            assert desc.fee == fee
+            assert len(desc.recipients) == 1
+            rec = desc.recipients[0]
+            assert rec.address == '42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm'
+            assert rec.amount == 1000000000000
 
-          res = self.wallet[signers[i+1]].sign_multisig(multisig_txset)
-          multisig_txset = res.tx_data_hex
-          assert len(res.tx_hash_list if 'tx_hash_list' in res else []) == (i == len(signers[1:]) - 1)
+            res = self.wallet[signers[i+1]].sign_multisig(multisig_txset)
+            multisig_txset = res.tx_data_hex
+            assert len(res.tx_hash_list if 'tx_hash_list' in res else []) == (i == len(signers[1:]) - 1)
 
-          if i < len(signers[1:]) - 1:
-            print('Submitting multisig transaction prematurely with wallet ' + str(signers[-1]))
-            ok = False
-            try: self.wallet[signers[-1]].submit_multisig(multisig_txset)
-            except: ok = True
-            assert ok
+            if i < len(signers[1:]) - 1:
+                print(
+                    f'Submitting multisig transaction prematurely with wallet {str(signers[-1])}'
+                )
+                ok = False
+                try: self.wallet[signers[-1]].submit_multisig(multisig_txset)
+                except: ok = True
+                assert ok
 
-        print('Submitting multisig transaction with wallet ' + str(signers[-1]))
+        print(f'Submitting multisig transaction with wallet {str(signers[-1])}')
         res = self.wallet[signers[-1]].submit_multisig(multisig_txset)
         assert len(res.tx_hash_list) == 1
         txid = res.tx_hash_list[0]
 
         for i in range(len(self.wallet)):
-          self.wallet[i].refresh()
-          res = self.wallet[i].get_transfers()
-          assert len([x for x in (res['pending'] if 'pending' in res else []) if x.txid == txid]) == (1 if i == signers[-1] else 0)
-          assert len([x for x in (res['out'] if 'out' in res else []) if x.txid == txid]) == 0
+            self.wallet[i].refresh()
+            res = self.wallet[i].get_transfers()
+            assert len([x for x in (res['pending'] if 'pending' in res else []) if x.txid == txid]) == (1 if i == signers[-1] else 0)
+            assert not [x for x in (res['out'] if 'out' in res else []) if x.txid == txid]
 
         daemon.generateblocks('42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm', 1)
         return txid
 
     def check_transaction(self, txid):
         for i in range(len(self.wallet)):
-          self.wallet[i].refresh()
-          res = self.wallet[i].get_transfers()
-          assert len([x for x in (res['pending'] if 'pending' in res else []) if x.txid == txid]) == 0
-          assert len([x for x in (res['out'] if 'out' in res else []) if x.txid == txid]) == 1
+            self.wallet[i].refresh()
+            res = self.wallet[i].get_transfers()
+            assert not [
+                x
+                for x in (res['pending'] if 'pending' in res else [])
+                if x.txid == txid
+            ]
+            assert len([x for x in (res['out'] if 'out' in res else []) if x.txid == txid]) == 1
 
 
 class Guard:

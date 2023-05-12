@@ -179,7 +179,7 @@ class BlockchainTest():
         txids = [x.miner_tx_hash for x in res.headers]
         res = daemon.get_transactions(txs_hashes = txids)
         assert len(res.txs) == nblocks
-        assert not 'missed_txs' in res or len(res.missed_txs) == 0
+        assert 'missed_txs' not in res or len(res.missed_txs) == 0
         running_output_index = 0
         for i in range(len(txids)):
             tx = res.txs[i]
@@ -276,8 +276,6 @@ class BlockchainTest():
             nonce += 1
 
         print('mining 3 on 1')
-        # three more on [1]
-        chain1 = []
         res = daemon.generateblocks('42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm', 3, prev_block = alt_blocks[1], starting_nonce = nonce)
         assert res.height == height + 3
         assert len(res.blocks) == 3
@@ -286,9 +284,7 @@ class BlockchainTest():
         nonce = res.block_header.nonce
         assert not res.block_header.orphan_status
         nonce += 1
-        chain1.append(blk_hash)
-        chain1.append(res.block_header.prev_hash)
-
+        chain1 = [blk_hash, res.block_header.prev_hash]
         print('Checking alt blocks match')
         res = daemon.get_alt_blocks_hashes()
         assert len(res.blks_hashes) == len(starting_alt_blocks) + 4

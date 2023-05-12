@@ -103,7 +103,7 @@ class ColdSigningTest():
             res = self.hot_wallet.incoming_transfers()
             num_outputs = len(res.transfers)
             done = [False] * num_outputs
-            while len([x for x in done if not done[x]]) > 0:
+            while [x for x in done if not done[x]]:
                 start = int(random.random() * num_outputs)
                 if start == num_outputs:
                     num_outputs -= 1
@@ -187,13 +187,17 @@ class ColdSigningTest():
 
         res = self.hot_wallet.get_transfers()
         assert len([x for x in (res['pending'] if 'pending' in res else []) if x.txid == txid]) == 1
-        assert len([x for x in (res['out'] if 'out' in res else []) if x.txid == txid]) == 0
+        assert not [x for x in (res['out'] if 'out' in res else []) if x.txid == txid]
 
         daemon.generateblocks(STANDARD_ADDRESS, 1)
         self.hot_wallet.refresh()
 
         res = self.hot_wallet.get_transfers()
-        assert len([x for x in (res['pending'] if 'pending' in res else []) if x.txid == txid]) == 0
+        assert not [
+            x
+            for x in (res['pending'] if 'pending' in res else [])
+            if x.txid == txid
+        ]
         assert len([x for x in (res['out'] if 'out' in res else []) if x.txid == txid]) == 1
 
         res = self.hot_wallet.get_tx_key(txid)

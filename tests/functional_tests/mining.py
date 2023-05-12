@@ -117,7 +117,7 @@ class MiningTest():
         # wait till we mined a few of them
         target_height = initial_height + 5
         height = initial_height
-        
+
         if not is_mining_measurent:
             timeout_init = 600
             timeout_mine = 300
@@ -149,7 +149,7 @@ class MiningTest():
             timeout_base_mine = 20
             timeout_init = calc_timeout(timeout_base_init, time_pi_all_cores,  cores_init)
             timeout_mine = calc_timeout(timeout_base_mine, time_pi_single_cpu, cores_mine)
-        
+
         msg_timeout_src = "adjusted for the currently available CPU power" if is_mining_measurent else "selected to have the default value"
         msg = "Timeout for {} {}, is {:.1f} s"
         self.print_mining_info(msg.format("init,  ", msg_timeout_src, timeout_init))
@@ -175,11 +175,7 @@ class MiningTest():
 
         self.print_time_taken(start, "mining total")
 
-        if via_daemon:
-            res = daemon.stop_mining()
-        else:
-            res = wallet.stop_mining()
-
+        res = daemon.stop_mining() if via_daemon else wallet.stop_mining()
         res_status = daemon.mining_status()
         assert res_status.active == False
 
@@ -203,10 +199,7 @@ class MiningTest():
         assert res_status.block_reward >= 600000000000
 
         # don't wait, might be a while if the machine is busy, which it probably is
-        if via_daemon:
-            res = daemon.stop_mining()
-        else:
-            res = wallet.stop_mining()
+        res = daemon.stop_mining() if via_daemon else wallet.stop_mining()
         res_status = daemon.mining_status()
         assert res_status.active == False
 
@@ -220,7 +213,7 @@ class MiningTest():
     def get_available_ram(self):
         available_ram = util_resources.available_ram_gb()
         threshold_ram = 3
-        self.print_mining_info("Available RAM = " + str(round(available_ram, 1)) + " GB")
+        self.print_mining_info(f"Available RAM = {str(round(available_ram, 1))} GB")
         if available_ram < threshold_ram and not self.is_mining_silent():
             print("Warning! Available RAM =", round(available_ram, 1), 
                   "GB is less than the reasonable threshold =", threshold_ram,

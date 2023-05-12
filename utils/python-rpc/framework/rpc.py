@@ -54,10 +54,7 @@ class Response(dict):
             return self == Response(other)
         if self.keys() != other.keys():
             return False
-        for k in self.keys():
-            if self[k] != other[k]:
-                return False
-        return True
+        return all(self[k] == other[k] for k in self.keys())
 
 class JSONRPC(object):
     def __init__(self, url):

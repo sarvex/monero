@@ -57,7 +57,7 @@ class AddressBookTest():
 
         # empty at start
         res = wallet.get_address_book()
-        assert not 'entries' in res or (res.entries) == 0
+        assert 'entries' not in res or (res.entries) == 0
         ok = False
         try: wallet.get_address_book([0])
         except: ok = True
@@ -121,7 +121,7 @@ class AddressBookTest():
         # delete (new) first
         res = wallet.delete_address_book(0)
         res = wallet.get_address_book()
-        assert not 'entries' in res or (res.entries) == 0
+        assert 'entries' not in res or (res.entries) == 0
 
         # add non-addresses
         errors = 0
@@ -137,7 +137,7 @@ class AddressBookTest():
         except: errors += 1
         assert errors == 5
         res = wallet.get_address_book()
-        assert not 'entries' in res or len(res.entries) == 0
+        assert 'entries' not in res or len(res.entries) == 0
 
         # openalias
         res = wallet.add_address_book('donate@getmonero.org', description = 'dev fund')
@@ -243,7 +243,7 @@ class AddressBookTest():
         wallet.delete_address_book(0)
         wallet.delete_address_book(0)
         res = wallet.get_address_book()
-        assert not 'entries' in res or len(res.entries) == 0
+        assert 'entries' not in res or len(res.entries) == 0
 
 
 if __name__ == '__main__':

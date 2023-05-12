@@ -45,5 +45,5 @@ class Zmq(object):
 
     def recv(self, topic):
         msg = self.socket.recv()
-        data = msg.decode().split(topic + ":")[1]
+        data = msg.decode().split(f"{topic}:")[1]
         return json.loads(data)

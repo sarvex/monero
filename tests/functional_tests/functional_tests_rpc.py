@@ -44,18 +44,56 @@ N_MONERODS = 4
 # 1 offline wallet
 N_WALLETS = 6
 
-WALLET_DIRECTORY = builddir + "/functional-tests-directory"
-FUNCTIONAL_TESTS_DIRECTORY = builddir + "/tests/functional_tests"
+WALLET_DIRECTORY = f"{builddir}/functional-tests-directory"
+FUNCTIONAL_TESTS_DIRECTORY = f"{builddir}/tests/functional_tests"
 DIFFICULTY = 10
 
-monerod_base = [builddir + "/bin/monerod", "--regtest", "--fixed-difficulty", str(DIFFICULTY), "--no-igd", "--p2p-bind-port", "monerod_p2p_port", "--rpc-bind-port", "monerod_rpc_port", "--zmq-rpc-bind-port", "monerod_zmq_port", "--zmq-pub", "monerod_zmq_pub", "--non-interactive", "--disable-dns-checkpoints", "--check-updates", "disabled", "--rpc-ssl", "disabled", "--data-dir", "monerod_data_dir", "--log-level", "1"]
+monerod_base = [
+    f"{builddir}/bin/monerod",
+    "--regtest",
+    "--fixed-difficulty",
+    str(DIFFICULTY),
+    "--no-igd",
+    "--p2p-bind-port",
+    "monerod_p2p_port",
+    "--rpc-bind-port",
+    "monerod_rpc_port",
+    "--zmq-rpc-bind-port",
+    "monerod_zmq_port",
+    "--zmq-pub",
+    "monerod_zmq_pub",
+    "--non-interactive",
+    "--disable-dns-checkpoints",
+    "--check-updates",
+    "disabled",
+    "--rpc-ssl",
+    "disabled",
+    "--data-dir",
+    "monerod_data_dir",
+    "--log-level",
+    "1",
+]
 monerod_extra = [
   ["--offline"],
   ["--rpc-payment-address", "44SKxxLQw929wRF6BA9paQ1EWFshNnKhXM3qz6Mo3JGDE2YG3xyzVutMStEicxbQGRfrYvAAYxH6Fe8rnD56EaNwUiqhcwR", "--rpc-payment-difficulty", str(DIFFICULTY), "--rpc-payment-credits", "5000", "--offline"],
   ["--add-exclusive-node", "127.0.0.1:18283"],
   ["--add-exclusive-node", "127.0.0.1:18282"],
 ]
-wallet_base = [builddir + "/bin/monero-wallet-rpc", "--wallet-dir", WALLET_DIRECTORY, "--rpc-bind-port", "wallet_port", "--disable-rpc-login", "--rpc-ssl", "disabled", "--daemon-ssl", "disabled", "--log-level", "1", "--allow-mismatched-daemon-version"]
+wallet_base = [
+    f"{builddir}/bin/monero-wallet-rpc",
+    "--wallet-dir",
+    WALLET_DIRECTORY,
+    "--rpc-bind-port",
+    "wallet_port",
+    "--disable-rpc-login",
+    "--rpc-ssl",
+    "disabled",
+    "--daemon-ssl",
+    "disabled",
+    "--log-level",
+    "1",
+    "--allow-mismatched-daemon-version",
+]
 wallet_extra = [
   ["--daemon-port", "18180"],
   ["--daemon-port", "18180"],
@@ -71,42 +109,51 @@ outputs = []
 ports = []
 
 for i in range(N_MONERODS):
-  command_lines.append([str(18180+i) if x == "monerod_rpc_port" else str(18280+i) if x == "monerod_p2p_port" else str(18380+i) if x == "monerod_zmq_port" else "tcp://127.0.0.1:" + str(18480+i) if x == "monerod_zmq_pub" else builddir + "/functional-tests-directory/monerod" + str(i) if x == "monerod_data_dir" else x for x in monerod_base])
+  command_lines.append([
+      str(18180 + i) if x == "monerod_rpc_port" else
+      str(18280 +
+          i) if x == "monerod_p2p_port" else str(18380 +
+                                                 i) if x == "monerod_zmq_port"
+      else f"tcp://127.0.0.1:{str(18480 + i)}" if x == "monerod_zmq_pub" else
+      f"{builddir}/functional-tests-directory/monerod{str(i)}" if x ==
+      "monerod_data_dir" else x for x in monerod_base
+  ])
   if i < len(monerod_extra):
     command_lines[-1] += monerod_extra[i]
-  outputs.append(open(FUNCTIONAL_TESTS_DIRECTORY + '/monerod' + str(i) + '.log', 'a+'))
+  outputs.append(open(f'{FUNCTIONAL_TESTS_DIRECTORY}/monerod{str(i)}.log', 'a+'))
   ports.append(18180+i)
 
 for i in range(N_WALLETS):
   command_lines.append([str(18090+i) if x == "wallet_port" else x for x in wallet_base])
   if i < len(wallet_extra):
     command_lines[-1] += wallet_extra[i]
-  outputs.append(open(FUNCTIONAL_TESTS_DIRECTORY + '/wallet' + str(i) + '.log', 'a+'))
+  outputs.append(open(f'{FUNCTIONAL_TESTS_DIRECTORY}/wallet{str(i)}.log', 'a+'))
   ports.append(18090+i)
 
 print('Starting servers...')
 try:
-  PYTHONPATH = os.environ['PYTHONPATH'] if 'PYTHONPATH' in os.environ else ''
+  PYTHONPATH = os.environ.get('PYTHONPATH', '')
   if len(PYTHONPATH) > 0:
     PYTHONPATH += ':'
-  PYTHONPATH += srcdir + '/../../utils/python-rpc'
+  PYTHONPATH += f'{srcdir}/../../utils/python-rpc'
   os.environ['PYTHONPATH'] = PYTHONPATH
   os.environ['WALLET_DIRECTORY'] = WALLET_DIRECTORY
   os.environ['FUNCTIONAL_TESTS_DIRECTORY'] = FUNCTIONAL_TESTS_DIRECTORY
   os.environ['SOURCE_DIRECTORY'] = srcdir
   os.environ['PYTHONIOENCODING'] = 'utf-8'
   os.environ['DIFFICULTY'] = str(DIFFICULTY)
-  os.environ['MAKE_TEST_SIGNATURE'] = FUNCTIONAL_TESTS_DIRECTORY + '/make_test_signature'
+  os.environ[
+      'MAKE_TEST_SIGNATURE'] = f'{FUNCTIONAL_TESTS_DIRECTORY}/make_test_signature'
   os.environ['SEEDHASH_EPOCH_BLOCKS'] = "8"
   os.environ['SEEDHASH_EPOCH_LAG'] = "4"
-  if not 'MINING_SILENT' in os.environ:
+  if 'MINING_SILENT' not in os.environ:
     os.environ['MINING_SILENT'] = "1"
 
-  for i in range(len(command_lines)):
-    #print('Running: ' + str(command_lines[i]))
-    processes.append(subprocess.Popen(command_lines[i], stdout = outputs[i]))
+  processes.extend(
+      subprocess.Popen(command_lines[i], stdout=outputs[i])
+      for i in range(len(command_lines)))
 except Exception as e:
-  print('Error: ' + str(e))
+  print(f'Error: {str(e)}')
   sys.exit(1)
 
 def kill():
@@ -115,7 +162,7 @@ def kill():
     except: pass
 
 # wait for error/startup
-for i in range(10):
+for _ in range(10):
   time.sleep(1)
   all_open = True
   for port in ports:
@@ -140,42 +187,23 @@ PASS = []
 FAIL = []
 for test in tests:
   try:
-    print('[TEST STARTED] ' + test)
+    print(f'[TEST STARTED] {test}')
     sys.stdout.flush()
-    cmd = [python, srcdir + '/' + test + ".py"]
+    cmd = [python, f'{srcdir}/{test}.py']
     subprocess.check_call(cmd)
     PASS.append(test)
-    print('[TEST PASSED] ' + test)
+    print(f'[TEST PASSED] {test}')
   except:
     FAIL.append(test)
-    print('[TEST FAILED] ' + test)
-    pass
-
+    print(f'[TEST FAILED] {test}')
 print('Stopping servers...')
 kill()
 
-# wait for exit, the poll method does not work (https://bugs.python.org/issue2475) so we wait, possibly forever if the process hangs
-if True:
-  for p in processes:
-    p.wait()
+for p in processes:
+  p.wait()
+if not FAIL:
+  print(f'Done, {len(PASS)}/{len(tests)} tests passed')
 else:
-  for i in range(10):
-    n_returncode = 0
-    for p in processes:
-      p.poll()
-      if p.returncode:
-        n_returncode += 1
-    if n_returncode == len(processes):
-      print('All done: ' + string.join([x.returncode for x in processes], ', '))
-      break
-    time.sleep(1)
-  for p in processes:
-    if not p.returncode:
-      print('Failed to stop process')
+  print(f'Done, {len(FAIL)}/{len(tests)} tests failed: ' + ', '.join(FAIL))
 
-if len(FAIL) == 0:
-  print('Done, ' + str(len(PASS)) + '/' + str(len(tests)) + ' tests passed')
-else:
-  print('Done, ' + str(len(FAIL)) + '/' + str(len(tests)) + ' tests failed: ' + ', '.join(FAIL))
-
-sys.exit(0 if len(FAIL) == 0 else 1)
+sys.exit(0 if not FAIL else 1)

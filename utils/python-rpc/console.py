@@ -34,19 +34,19 @@ for n in range(1, len(sys.argv)):
       scheme = t.scheme or scheme
       host = t.hostname or host
       port = t.port or port
-      if scheme != 'http' and scheme != 'https':
+      if scheme not in ['http', 'https']:
         raise Exception(USAGE)
       if port <= 0 or port > 65535:
         raise Exception(USAGE)
   except Exception as e:
-    print('Error: ' + str(e))
+    print(f'Error: {str(e)}')
     raise Exception(USAGE)
 
   # check for open port
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   s.settimeout(1)
   if s.connect_ex((host, port)) != 0:
-    raise Exception('No wallet or daemon RPC on port ' + str(port))
+    raise Exception(f'No wallet or daemon RPC on port {str(port)}')
   s.close()
 
   # both wallet and daemon have a get_version JSON RPC
@@ -59,7 +59,7 @@ for n in range(1, len(sys.argv)):
   try:
     res = rpc.send_json_rpc_request(get_version)
   except Exception as e:
-    raise Exception('Failed to call version RPC: ' + str(e))
+    raise Exception(f'Failed to call version RPC: {str(e)}')
 
   if 'version' not in res:
     raise Exception('Server is not a Monero process')
@@ -89,9 +89,9 @@ didx = 0
 widx = 0
 for rpc in rpcs:
   if type(rpc) == framework.daemon.Daemon:
-    var = "daemon" if len(daemons) == 1 else "daemons[" + str(didx) + "]"
+    var = "daemon" if len(daemons) == 1 else f"daemons[{str(didx)}]"
     didx += 1
   else:
-    var = "wallet" if len(wallets) == 1 else "wallets[" + str(widx) + "]"
+    var = "wallet" if len(wallets) == 1 else f"wallets[{str(widx)}]"
     widx += 1
   print('Variable \'%s\' connected to %s RPC on %s:%u' % (var, 'daemon' if type(rpc) == framework.daemon.Daemon else 'wallet', rpc.host ,rpc.port))

@@ -9,7 +9,7 @@ py = sys.argv[2]
 c = sys.argv[3]
 data = sys.argv[4]
 
-first = python + " " + py + " > " + data
+first = f"{python} {py} > {data}"
 second = [c, '--wide', data]
 
 try:

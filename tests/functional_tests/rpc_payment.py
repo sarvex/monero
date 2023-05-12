@@ -62,8 +62,7 @@ class RPCPaymentTest():
         self.signatures_time = time.time()
         self.signatures = []
         signatures = subprocess.check_output([self.make_test_signature, self.secret_key, '256']).decode('utf-8')
-        for line in signatures.split():
-            self.signatures.append(line.rstrip())
+        self.signatures.extend(line.rstrip() for line in signatures.split())
 
     def get_signature(self):
         if len(self.signatures) == 0 or self.signatures_time + 10 < time.time():
@@ -389,7 +388,9 @@ class RPCPaymentTest():
         # that should be rejected because its cost is massive
         ok = False
         try: res = daemon.get_output_histogram(amounts = [], client = self.get_signature())
-        except Exception as e: print('e: ' + str(e)); ok = "PAYMENT REQUIRED" in e.status
+        except Exception as e:
+            print(f'e: {str(e)}')
+            ok = "PAYMENT REQUIRED" in e.status
         assert ok or "PAYMENT REQUIRED" in res.status
 
     def test_access_account(self):

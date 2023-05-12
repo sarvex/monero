@@ -33,41 +33,41 @@ def LCG():
   return lcg_seed
 
 def run(t, blocks):
-  global embw
-  global ltembw
+    global embw
+    global ltembw
 
-  weights = [MEDIAN_THRESHOLD]*MEDIAN_WINDOW_SMALL # weights of recent blocks (B), with index -1 most recent
-  lt_weights = [MEDIAN_THRESHOLD]*MEDIAN_WINDOW_BIG # long-term weights
+    weights = [MEDIAN_THRESHOLD]*MEDIAN_WINDOW_SMALL # weights of recent blocks (B), with index -1 most recent
+    lt_weights = [MEDIAN_THRESHOLD]*MEDIAN_WINDOW_BIG # long-term weights
 
-  for block in range(blocks):
-      # determine the long-term effective weight
-      ltmedian = get_median(lt_weights[-MEDIAN_WINDOW_BIG:])
-      ltembw = max(MEDIAN_THRESHOLD,ltmedian)
+    for block in range(blocks):
+        # determine the long-term effective weight
+        ltmedian = get_median(lt_weights[-MEDIAN_WINDOW_BIG:])
+        ltembw = max(MEDIAN_THRESHOLD,ltmedian)
 
-      # determine the effective weight
-      stmedian = get_median(weights[-MEDIAN_WINDOW_SMALL:])
-      embw = min(max(MEDIAN_THRESHOLD,stmedian),int(MULTIPLIER_BIG*ltembw))
+        # determine the effective weight
+        stmedian = get_median(weights[-MEDIAN_WINDOW_SMALL:])
+        embw = min(max(MEDIAN_THRESHOLD,stmedian),int(MULTIPLIER_BIG*ltembw))
 
-      # drop the lowest values
-      weights = weights[1:]
-      lt_weights = lt_weights[1:]
+        # drop the lowest values
+        weights = weights[1:]
+        lt_weights = lt_weights[1:]
 
-      # add a block of max weight
-      if t == 0:
-        max_weight = 2 * embw
-      elif t == 1:
-        r = LCG()
-        max_weight = int(90 + r % 500000 + 250000 + math.sin(block / 200.) * 350000)
-        if max_weight < 90: max_weight = 90
-      elif t == 2:
-        max_weight = 90
-      else:
-        sys.exit(1)
-      weights.append(max_weight)
-      lt_weights.append(min(max_weight,int(ltembw + int(ltembw * 2 / 5))))
+              # add a block of max weight
+        if t == 0:
+            max_weight = 2 * embw
+        elif t == 1:
+            r = LCG()
+            max_weight = int(90 + r % 500000 + 250000 + math.sin(block / 200.) * 350000)
+            max_weight = max(max_weight, 90)
+        elif t == 2:
+          max_weight = 90
+        else:
+            sys.exit(1)
+        weights.append(max_weight)
+        lt_weights.append(min(max_weight,int(ltembw + int(ltembw * 2 / 5))))
 
-      #print "H %u, r %u, BW %u, EMBW %u, LTBW %u, LTEMBW %u, ltmedian %u" % (block, r, max_weight, embw, lt_weights[-1], ltembw, ltmedian)
-      print("H %u, BW %u, EMBW %u, LTBW %u" % (block, max_weight, embw, lt_weights[-1]))
+        #print "H %u, r %u, BW %u, EMBW %u, LTBW %u, LTEMBW %u, ltmedian %u" % (block, r, max_weight, embw, lt_weights[-1], ltembw, ltmedian)
+        print("H %u, BW %u, EMBW %u, LTBW %u" % (block, max_weight, embw, lt_weights[-1]))
 
 run(0, 2 * MEDIAN_WINDOW_BIG)
 run(1, 9 * MEDIAN_WINDOW_BIG)

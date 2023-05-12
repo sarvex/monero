@@ -66,12 +66,15 @@ class SpeedTest():
         except: pass
         wallet.restore_deterministic_wallet('velvet lymph giddy number token physics poetry unquoted nibs useful sabotage limits benches lifestyle eden nitrogen anvil fewest avoid batch vials washing fences goat unquoted')
 
-        destinations = []
-        for i in range(3):
-            destinations.append({"amount":1,"address":'888tNkZrPN6JsEgekjMnABU4TBzc2Dt29EPAvkRxbANsAnjyPbb3iQ1YBRk1UXcdRsiKc9dhwMVgN5S9cQUiyoogDavup3H'})
-
+        destinations = [
+            {
+                "amount": 1,
+                "address": '888tNkZrPN6JsEgekjMnABU4TBzc2Dt29EPAvkRxbANsAnjyPbb3iQ1YBRk1UXcdRsiKc9dhwMVgN5S9cQUiyoogDavup3H',
+            }
+            for _ in range(3)
+        ]
         self._test_speed_generateblocks(daemon=daemon, blocks=70)
-        for i in range(1, 10):
+        for _ in range(1, 10):
             while wallet.get_balance().unlocked_balance == 0:
                 print('Waiting for wallet to refresh...')
                 sleep(1)

@@ -166,7 +166,7 @@ class P2PTest():
 
         for daemon in [daemon2, daemon3]:
             res = daemon.get_transaction_pool_hashes()
-            assert not 'tx_hashes' in res or len(res.tx_hashes) == 0
+            assert 'tx_hashes' not in res or len(res.tx_hashes) == 0
 
         self.wallet.refresh()
         res = self.wallet.get_balance()
